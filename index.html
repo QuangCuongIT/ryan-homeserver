@@ -96,57 +96,118 @@
                 transform: rotate(360deg);
             }
         }
+        /* End loading animation */
+
+        select {
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            color: #333;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #0077cc;
+        }
+
+        select option {
+            padding: 8px;
+        }
+
+        select option:checked {
+            background-color: #3498db;
+            color: #fff;
+        }
     </style>
 </head>
 
 <body>
     <header>
         <h1><img src="./images/server2.png" class="logo">Ryan Home Server</h1>
+        <div class="selector">
+            <select id="connection-type" onchange="changeConnection()">
+                <option value="ngrok">Ngrok</option>
+                <option value="ip" selected>IP Direct</option>
+            </select>
+        </div>
     </header>
 
     <div id="result"><div id="loading" class="loader"></div></div>
+
     <script>
         const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
         });
         let apiKey = params?.api_key || null;
 
-        if (apiKey) {
-            let responseApi = '';
-            fetch('https://api.ngrok.com/tunnels', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + apiKey,
-                    'Ngrok-Version': '2',
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(data);
-                    const result = data?.tunnels?.map(tunnel => ({
-                        name: getNameAndLogo(tunnel).serviceName,
-                        image: getNameAndLogo(tunnel).imageUrl,
-                        value: tunnel.public_url
-                    })) ?? [];
-                    const resultDiv = document.getElementById('result');
-                    resultDiv.innerHTML = '';
+        changeConnection();
+        function changeConnection() {
+            var selectedValue = document.getElementById("connection-type").value;
 
-                    resultDiv.innerHTML = result.map(obj =>
-                        `<div class="card">
-                            <a href="${obj.value}" target="_blank">
-                                <div class="card-body">
-                                    <img src="${obj.image}" alt="Service Logo" class="logo">
-                                    <h3>${obj.name}</h3>
-                                </div>
-                            </a>
-                        </div>`).join('');
+            const resultDiv = document.getElementById('result');
+
+            if (!apiKey) {
+                resultDiv.innerHTML = 'Permission denied!';
+                return;
+            }
+
+
+            if (selectedValue === "ngrok") {
+                let responseApi = '';
+                fetch('https://api.ngrok.com/tunnels', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + apiKey,
+                        'Ngrok-Version': '2',
+                    }
                 })
-                .catch(error => responseApi = 'Error');
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+                        const result = data?.tunnels?.map(tunnel => ({
+                            name: getNameAndLogo(tunnel).serviceName,
+                            image: getNameAndLogo(tunnel).imageUrl,
+                            value: tunnel.public_url
+                        })) ?? [];
+                        resultDiv.innerHTML = '';
+
+                        resultDiv.innerHTML = result.map(obj =>
+                            `<div class="card">
+                                <a href="${obj.value}" target="_blank">
+                                    <div class="card-body">
+                                        <img src="${obj.image}" alt="Service Logo" class="logo">
+                                        <h3>${obj.name}</h3>
+                                    </div>
+                                </a>
+                            </div>`).join('');
+                    })
+                    .catch(error => responseApi = 'Error');
+            } else if (selectedValue === "ip") {
+                let homeUrl = `https://ryanhomeserver.serveo.net/?api_key=${apiKey}`;
+                fetch(homeUrl, {
+                    method: 'GET',
+                    mode: 'no-cors',
+                })
+                    .then(response => {
+                        console.log("response", response)
+                        return response.text();
+                    })
+                    .then(data => {
+                        console.log("data", data);
+                    })
+                    .catch(error => responseApi = 'Error');
+            }
         }
 
         function getNameAndLogo(tunnel) {
@@ -173,7 +234,6 @@
             }
 
         }
-
     </script>
 </body>
 
