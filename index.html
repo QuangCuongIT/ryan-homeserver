@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,7 +15,6 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-
         header {
             width: 100%;
             background-color: #3498db;
@@ -24,24 +22,20 @@
             padding: 10px 0;
             text-align: center;
         }
-
         nav {
             margin: 0;
             padding: 0;
         }
-
         h1 {
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
         .database-icon img {
             height: 30px;
             margin-right: 10px;
         }
-
         .card {
             background-color: #fff;
             border-radius: 8px;
@@ -52,25 +46,21 @@
             max-width: 300px;
             min-width: 200px;
         }
-
         .logo {
             height: 30px;
             margin-right: 13px;
         }
-
         .card .card-body {
             padding: 15px;
             position: relative;
             display: flex;
             align-items: center;
         }
-
         .card h3 {
             margin: 0;
             padding: 0;
             font-size: 20px;
         }
-
         .card a {
             text-decoration: none;
             color: inherit;
@@ -96,124 +86,59 @@
                 transform: rotate(360deg);
             }
         }
-        /* End loading animation */
-
-        select {
-            padding: 8px;
-            font-size: 16px;
-            border: 2px solid #3498db;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            color: #333;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            cursor: pointer;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #0077cc;
-        }
-
-        select option {
-            padding: 8px;
-        }
-
-        select option:checked {
-            background-color: #3498db;
-            color: #fff;
-        }
     </style>
 </head>
 
 <body>
     <header>
         <h1><img src="./images/server2.png" class="logo">Ryan Home Server</h1>
-        <div class="selector">
-            <select id="connection-type" onchange="changeConnection()">
-                <option value="ngrok">Ngrok</option>
-                <option value="ip" selected>IP Direct</option>
-            </select>
-        </div>
     </header>
 
     <div id="result"><div id="loading" class="loader"></div></div>
-
     <script>
         const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
         });
         let apiKey = params?.api_key || null;
-
-        changeConnection();
-        function changeConnection() {
-            var selectedValue = document.getElementById("connection-type").value;
-
-            const resultDiv = document.getElementById('result');
-
-            if (!apiKey) {
-                resultDiv.innerHTML = 'Permission denied!';
-                return;
-            }
-
-
-            if (selectedValue === "ngrok") {
-                let responseApi = '';
-                fetch('https://api.ngrok.com/tunnels', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + apiKey,
-                        'Ngrok-Version': '2',
+        if (apiKey) {
+            let responseApi = '';
+            fetch('https://api.ngrok.com/tunnels', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + apiKey,
+                    'Ngrok-Version': '2',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
+                    return response.json();
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log(data);
-                        const result = data?.tunnels?.map(tunnel => ({
-                            name: getNameAndLogo(tunnel).serviceName,
-                            image: getNameAndLogo(tunnel).imageUrl,
-                            value: tunnel.public_url
-                        })) ?? [];
-                        resultDiv.innerHTML = '';
-
-                        resultDiv.innerHTML = result.map(obj =>
-                            `<div class="card">
-                                <a href="${obj.value}" target="_blank">
-                                    <div class="card-body">
-                                        <img src="${obj.image}" alt="Service Logo" class="logo">
-                                        <h3>${obj.name}</h3>
-                                    </div>
-                                </a>
-                            </div>`).join('');
-                    })
-                    .catch(error => responseApi = 'Error');
-            } else if (selectedValue === "ip") {
-                let homeUrl = `https://ryanhomeserver.serveo.net/?api_key=${apiKey}`;
-                fetch(homeUrl, {
-                    method: 'GET',
-                    // mode: 'no-cors',
+                .then(data => {
+                    console.log(data);
+                    const result = data?.tunnels?.map(tunnel => ({
+                        name: getNameAndLogo(tunnel).serviceName,
+                        image: getNameAndLogo(tunnel).imageUrl,
+                        value: tunnel.public_url
+                    })) ?? [];
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = '';
+                    resultDiv.innerHTML = result.map(obj =>
+                        `<div class="card">
+                            <a href="${obj.value}" target="_blank">
+                                <div class="card-body">
+                                    <img src="${obj.image}" alt="Service Logo" class="logo">
+                                    <h3>${obj.name}</h3>
+                                </div>
+                            </a>
+                        </div>`).join('');
                 })
-                    .then(response => {
-                        console.log("response", response)
-                        return response.text();
-                    })
-                    .then(data => {
-                        console.log("data", data);
-                    })
-                    .catch(error => responseApi = 'Error');
-            }
+                .catch(error => responseApi = 'Error');
         }
-
         function getNameAndLogo(tunnel) {
             var serviceName;
             var imageUrl;
-
             if (tunnel.forwards_to.includes('8080')) {
                 serviceName = 'qbittorrent';
                 imageUrl = './images/qbittorrent.svg'
@@ -227,14 +152,11 @@
                 serviceName = tunnel.forwards_to;
                 imageUrl = './images/default.png'
             }
-
             return {
                 serviceName: serviceName,
                 imageUrl: imageUrl
             }
-
         }
     </script>
 </body>
-
 </html>
