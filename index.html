@@ -197,7 +197,7 @@
                 let homeUrl = `https://ryanhomeserver.serveo.net/?api_key=${apiKey}`;
                 fetch(homeUrl, {
                     method: 'GET',
-                    mode: 'no-cors',
+                    // mode: 'no-cors',
                 })
                     .then(response => {
                         console.log("response", response)
