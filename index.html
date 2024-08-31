@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -15,6 +16,7 @@
             flex-wrap: wrap;
             justify-content: center;
         }
+
         header {
             width: 100%;
             background-color: #3498db;
@@ -22,48 +24,22 @@
             padding: 10px 0;
             text-align: center;
         }
+
         nav {
             margin: 0;
             padding: 0;
         }
+
         h1 {
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .database-icon img {
-            height: 30px;
-            margin-right: 10px;
-        }
-        .card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 10px;
-            overflow: hidden;
-            position: relative;
-            max-width: 300px;
-            min-width: 200px;
-        }
+
         .logo {
             height: 30px;
             margin-right: 13px;
-        }
-        .card .card-body {
-            padding: 15px;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .card h3 {
-            margin: 0;
-            padding: 0;
-            font-size: 20px;
-        }
-        .card a {
-            text-decoration: none;
-            color: inherit;
         }
 
         /* Loading animation */
@@ -100,6 +76,7 @@
             get: (searchParams, prop) => searchParams.get(prop),
         });
         let apiKey = params?.api_key || null;
+
         if (apiKey) {
             let responseApi = '';
             fetch('https://api.ngrok.com/tunnels', {
@@ -117,46 +94,21 @@
                 })
                 .then(data => {
                     console.log(data);
-                    const result = data?.tunnels?.map(tunnel => ({
-                        name: getNameAndLogo(tunnel).serviceName,
-                        image: getNameAndLogo(tunnel).imageUrl,
-                        value: tunnel.public_url
-                    })) ?? [];
-                    const resultDiv = document.getElementById('result');
-                    resultDiv.innerHTML = '';
-                    resultDiv.innerHTML = result.map(obj =>
-                        `<div class="card">
-                            <a href="${obj.value}" target="_blank">
-                                <div class="card-body">
-                                    <img src="${obj.image}" alt="Service Logo" class="logo">
-                                    <h3>${obj.name}</h3>
-                                </div>
-                            </a>
-                        </div>`).join('');
+
+                    var result = [];
+                    if (data && data.tunnels) {
+                        for (var i = 0; i < data.tunnels.length; i++) {
+                            var tunnel = data.tunnels[i];
+                            if (tunnel.forwards_to.includes('5000')) {
+                                window.location.href = tunnel.public_url;
+                            }
+                        }
+                    }
+
                 })
                 .catch(error => responseApi = 'Error');
         }
-        function getNameAndLogo(tunnel) {
-            var serviceName;
-            var imageUrl;
-            if (tunnel.forwards_to.includes('8080')) {
-                serviceName = 'qbittorrent';
-                imageUrl = './images/qbittorrent.svg'
-            } else if (tunnel.forwards_to.includes('80') && !tunnel.forwards_to.includes('8080')) {
-                serviceName = 'Jellyfin';
-                imageUrl = './images/jellyfin.png'
-            } else if (tunnel.forwards_to.includes('8188')) {
-                serviceName = 'File Browser';
-                imageUrl = './images/file-browser.svg'
-            } else {
-                serviceName = tunnel.forwards_to;
-                imageUrl = './images/default.png'
-            }
-            return {
-                serviceName: serviceName,
-                imageUrl: imageUrl
-            }
-        }
     </script>
 </body>
+
 </html>
